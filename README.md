@@ -9,6 +9,8 @@ Hansol 시나리오 XML을 읽어 음성 입력 노드마다 **보이는 ARS(WV)
 
 ## 실행
 
+사용자용 상세 안내(작업 순서, review.txt 조치, 문제 해결)는 [docs/USAGE.md](docs/USAGE.md)를 참고하세요.
+
 ```bat
 arsxml2wv.exe <input.xml> <output-dir> [labels.properties]
 ```
