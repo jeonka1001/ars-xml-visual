@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/jeonka1001/ars-xml-visual/internal/tsv"
 )
 
 // 아래 xml* 타입은 파싱 전용이다. 좌표·스타일 등 화면 요소는 읽지 않는다.
@@ -78,38 +80,22 @@ func toLinks(raw []xmlLink) []Link {
 	return links
 }
 
-// WriteNodesTSV는 검토용 노드 목록을 TSV로 쓴다.
-func WriteNodesTSV(w io.Writer, d *Diagram) error {
-	var b strings.Builder
-	b.WriteString("node_id\tnode_type\tnode_name\ttarget_page\tcomment\n")
+// NodesTSV는 검토용 노드 목록이다.
+func NodesTSV(d *Diagram) string {
+	t := tsv.New("node_id", "node_type", "node_name", "target_page", "comment")
 	for _, n := range d.Nodes {
-		writeRow(&b, n.ID, n.Type, n.Text, n.Prop("TargetPage"), n.Prop("Comment"))
+		t.Row(n.ID, n.Type, n.Text, n.Prop("TargetPage"), n.Prop("Comment"))
 	}
-	_, err := io.WriteString(w, b.String())
-	return err
+	return t.String()
 }
 
-// WriteLinksTSV는 검토용 링크 목록을 TSV로 쓴다.
-func WriteLinksTSV(w io.Writer, d *Diagram) error {
-	var b strings.Builder
-	b.WriteString("link_id\torigin_id\torigin_name\tbranch_text\tdestination_id\tdestination_name\n")
+// LinksTSV는 검토용 링크 목록이다.
+func LinksTSV(d *Diagram) string {
+	t := tsv.New("link_id", "origin_id", "origin_name", "branch_text", "destination_id", "destination_name")
 	for _, l := range d.Links {
 		from, _ := d.Node(l.From)
 		to, _ := d.Node(l.To)
-		writeRow(&b, l.ID, l.From, from.Text, l.Text, l.To, to.Text)
+		t.Row(l.ID, l.From, from.Text, l.Text, l.To, to.Text)
 	}
-	_, err := io.WriteString(w, b.String())
-	return err
-}
-
-var cellCleaner = strings.NewReplacer("\t", " ", "\r\n", " ", "\n", " ", "\r", " ")
-
-func writeRow(b *strings.Builder, cells ...string) {
-	for i, c := range cells {
-		if i > 0 {
-			b.WriteByte('\t')
-		}
-		b.WriteString(cellCleaner.Replace(c))
-	}
-	b.WriteByte('\n')
+	return t.String()
 }

@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/jeonka1001/ars-xml-visual/internal/diagram"
+	"github.com/jeonka1001/ars-xml-visual/internal/input"
 )
 
 // 콘솔 메시지는 영문으로 둔다. 한글 Windows 콘솔(CP949)에서 UTF-8 한글이 깨지기 때문이다.
@@ -22,16 +23,21 @@ func main() {
 	}
 }
 
-func run(input, outDir string) error {
-	d, err := diagram.Load(input)
+func run(xmlPath, outDir string) error {
+	d, err := diagram.Load(xmlPath)
 	if err != nil {
 		return err
 	}
 	if err := diagram.ExportInventory(d, outDir); err != nil {
 		return err
 	}
-	fmt.Printf("nodes: %d, links: %d, warnings: %d\n", len(d.Nodes), len(d.Links), len(d.Warnings))
-	for _, w := range d.Warnings {
+	specs, warnings := input.Collect(d)
+	if err := input.ExportSpecs(specs, outDir); err != nil {
+		return err
+	}
+	warnings = append(append([]string{}, d.Warnings...), warnings...)
+	fmt.Printf("nodes: %d, links: %d, input nodes: %d, warnings: %d\n", len(d.Nodes), len(d.Links), len(specs), len(warnings))
+	for _, w := range warnings {
 		fmt.Println("warning:", w)
 	}
 	return nil

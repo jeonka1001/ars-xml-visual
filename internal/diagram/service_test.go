@@ -67,11 +67,7 @@ func TestWriteTSVEscapesCells(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var b strings.Builder
-	if err := WriteNodesTSV(&b, d); err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(b.String(), "1\tCallPageNode\t메뉴 선택\tInputDTMF_Menu.xml\t\n") {
-		t.Errorf("nodes.tsv =\n%s", b.String())
+	if got := NodesTSV(d); !strings.Contains(got, "1\tCallPageNode\t메뉴 선택\tInputDTMF_Menu.xml\t\n") {
+		t.Errorf("nodes.tsv =\n%s", got)
 	}
 }
