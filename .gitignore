@@ -1,0 +1,9 @@
+# 샘플·운영 XML 등 참고 자료 (업로드 금지)
+samples/
+
+# 빌드 산출물
+/dist/
+*.exe
+
+# OS
+.DS_Store
