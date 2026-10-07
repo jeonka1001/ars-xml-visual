@@ -54,6 +54,7 @@ arsxml2wv.exe <input.xml> <output-dir> [labels.properties]
 ## labels.properties
 
 UTF-8로 작성합니다. 왼쪽 숫자는 노드 `Id`입니다(Sequence가 아님). 키 이름에 들어가는 `#`는 `\#`로 씁니다.
+전체 예시는 `labels.example.properties`를 참고하세요.
 
 ```properties
 # 모든 화면의 제목
