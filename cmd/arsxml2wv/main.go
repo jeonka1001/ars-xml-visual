@@ -12,6 +12,7 @@ import (
 	"github.com/jeonka1001/ars-xml-visual/internal/input"
 	"github.com/jeonka1001/ars-xml-visual/internal/label"
 	"github.com/jeonka1001/ars-xml-visual/internal/tsv"
+	"github.com/jeonka1001/ars-xml-visual/internal/wv"
 )
 
 // 콘솔 메시지는 영문으로 둔다. 한글 Windows 콘솔(CP949)에서 UTF-8 한글이 깨지기 때문이다.
@@ -41,12 +42,16 @@ func run(xmlPath, outDir, labelsPath string) error {
 	}
 	specs, inputWarnings := input.Collect(d)
 	buttons, labelNotes := label.ResolveAll(d, specs, overrides)
-	review := concat(d.Warnings, inputWarnings, labelNotes)
+	screens, screenNotes := wv.BuildAll(wv.Input{Diagram: d, Specs: specs, Buttons: buttons, Overrides: overrides})
+	review := concat(d.Warnings, inputWarnings, labelNotes, screenNotes)
 	if err := export(d, specs, buttons, review, outDir); err != nil {
 		return err
 	}
-	fmt.Printf("nodes: %d, links: %d, input nodes: %d, menus: %d, review items: %d\n",
-		len(d.Nodes), len(d.Links), len(specs), len(buttons), len(review))
+	if err := wv.Export(screens, outDir); err != nil {
+		return err
+	}
+	fmt.Printf("nodes: %d, links: %d, input nodes: %d, screens: %d, review items: %d\n",
+		len(d.Nodes), len(d.Links), len(specs), len(screens), len(review))
 	fmt.Println("see review.txt for items to check")
 	return nil
 }
