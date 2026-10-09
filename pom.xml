@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.wavve</groupId>
+  <artifactId>arsxml2wv</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+  <name>arsxml2wv</name>
+  <description>Hansol 시나리오 XML을 보이는 ARS(WV) 화면 스크립트 초안으로 변환</description>
+
+  <!--
+    폐쇄망 빌드를 고려해 실행 의존성은 없고, 테스트용 JUnit 4와 Maven 기본 플러그인만 사용한다.
+    플러그인 버전은 JDK 1.8에서 동작하고 사내 저장소에 있을 가능성이 높은 버전으로 고정했다.
+  -->
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>arsxml2wv</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.2</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>com.wavve.arsxml2wv.Main</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- JDK 9 이상으로 빌드할 때도 Java 8 API만 쓰도록 강제한다 (JDK 1.8 빌드에는 영향 없음). -->
+    <profile>
+      <id>release-8</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <properties>
+        <maven.compiler.release>8</maven.compiler.release>
+      </properties>
+    </profile>
+  </profiles>
+</project>
