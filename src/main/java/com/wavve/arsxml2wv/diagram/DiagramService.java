@@ -50,6 +50,8 @@ public final class DiagramService {
             DocumentBuilder builder = secureFactory().newDocumentBuilder();
             builder.setErrorHandler(THROW_ALL);
             return builder.parse(in);
+        } catch (SAXParseException e) {
+            throw new AppException("parse XML: " + describe(e), e);
         } catch (SAXException e) {
             throw new AppException("parse XML: " + e.getMessage(), e);
         } catch (IOException e) {
@@ -59,10 +61,21 @@ public final class DiagramService {
         }
     }
 
+    /** 파서 메시지는 OS 언어로 나오므로 위치(줄·열)를 붙이고, DOCTYPE 거부는 고정 문구로 바꾼다. */
+    private static String describe(SAXParseException e) {
+        String msg = String.valueOf(e.getMessage());
+        if (msg.contains(DISALLOW_DOCTYPE)) {
+            msg = "DOCTYPE is not allowed";
+        }
+        return "line " + e.getLineNumber() + ", column " + e.getColumnNumber() + ": " + msg;
+    }
+
+    private static final String DISALLOW_DOCTYPE = "http://apache.org/xml/features/disallow-doctype-decl";
+
     private static DocumentBuilderFactory secureFactory() throws ParserConfigurationException {
         DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
         f.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        f.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        f.setFeature(DISALLOW_DOCTYPE, true);
         f.setFeature("http://xml.org/sax/features/external-general-entities", false);
         f.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
         f.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
