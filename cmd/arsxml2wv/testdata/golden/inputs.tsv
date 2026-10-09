@@ -1,4 +1,0 @@
-node_id	node_name	kind	page	mask	length	term_mask	ment_code	guide
-3	금액 입력	number	inputDTMF.xml	1234567890	12	*#	T000001	이체 금액과 우물정자를 눌러 주십시오.
-4	이체 확인	menu	InputDTMF_Menu.xml	12*#	1		T000002	이체를 진행하시려면 1번, 취소는 2번을 눌러주십시오.
-8	완료 메뉴	menu	InputDTMF_Menu.xml	19#	1			다른 이체는 1번, 처음으로 돌아가시려면 9번을 눌러주십시오.

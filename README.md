@@ -4,7 +4,8 @@ Hansol 시나리오 XML을 읽어 음성 입력 노드마다 **보이는 ARS(WV)
 생성 결과는 해당 노드의 PreScript에 붙여 넣는 JavaScript 코드 조각입니다.
 도구는 원본 XML을 수정하지 않습니다.
 
-- Windows 단일 exe로 실행됩니다. 런타임 설치나 인터넷 연결이 필요 없어 폐쇄망에서 사용할 수 있습니다.
+- Java 1.8 기반이며 외부 라이브러리를 쓰지 않습니다. 인터넷 연결 없이 폐쇄망에서 사용할 수 있습니다.
+- `arsxml2wv.exe`는 같은 폴더의 `arsxml2wv.jar`를 설치된 Java(1.8 이상, `JAVA_HOME` 또는 `PATH`)로 실행하는 래퍼입니다. exe를 쓸 수 없으면 `arsxml2wv.bat`을 쓰거나 `java -jar arsxml2wv.jar ...`로 실행합니다.
 - 입력 XML 안의 스크립트는 실행하지 않고 문자열로만 해석합니다. 외부 엔티티(XXE)도 처리하지 않습니다.
 
 ## 실행
@@ -14,6 +15,8 @@ Hansol 시나리오 XML을 읽어 음성 입력 노드마다 **보이는 ARS(WV)
 ```bat
 arsxml2wv.exe <input.xml> <output-dir> [labels.properties]
 ```
+
+배포 폴더 구성: `arsxml2wv.exe`, `arsxml2wv.jar`, `arsxml2wv.bat`, `USAGE.md`, `labels.example.properties`
 
 - 출력 폴더가 없으면 만들고, 같은 이름의 파일은 덮어씁니다.
 - 콘솔 메시지는 한글 Windows 콘솔에서 깨지지 않도록 영문으로 출력합니다.
@@ -41,7 +44,7 @@ arsxml2wv.exe <input.xml> <output-dir> [labels.properties]
 | `CallPageNode` → `InputDTMF_Menu.xml`, 처리 거래 후 | `SHKE00` 완료 메뉴 | `BTN` |
 
 - **처리 거래:** `app.trCode`가 `u01`처럼 `u+숫자`로 끝나는 노드입니다. 이 노드에서 링크로 도달할 수 있는 메뉴는 완료 메뉴로 봅니다.
-- **공통 레코드:** `S`, `BTH`, `TIT`, `TXT`, `CHA`, `BOT`와 `wvMsgType="WV2000Q"`, `wvMaxRetryCount="2"`를 넣습니다. `wvReadTimeout`은 완료 화면이 `A`, 나머지는 `B`입니다. 형식은 `internal/wv/templates/screen.js.tmpl`에서 바꿀 수 있습니다.
+- **공통 레코드:** `S`, `BTH`, `TIT`, `TXT`, `CHA`, `BOT`와 `wvMsgType="WV2000Q"`, `wvMaxRetryCount="2"`를 넣습니다. `wvReadTimeout`은 완료 화면이 `A`, 나머지는 `B`입니다. 형식은 `src/main/resources/screen.js.tmpl`에서 바꿀 수 있습니다.
 - **구분자:** `\$`를 씁니다. 한글 Windows에서는 `₩$`로 보입니다. 문구에 `$`나 `;`가 있으면 규격이 깨지므로 해당 화면을 만들지 않고 `review.txt`에 남깁니다.
 - **PreScript 해석:** `app.digitMask = "12*#";`처럼 문자열을 한 번만 대입한 경우만 해석합니다. 운영 XML의 오타 `digitLegth`도 인식합니다. 변수 대입, 중복 대입, if/switch 같은 분기문이 있으면 그 노드는 건너뜁니다.
 - **버튼 문구 우선순위:**
@@ -84,31 +87,31 @@ title=자동이체 신청
 
 ## 개발
 
-Go 1.22 이상이 필요합니다. 외부 라이브러리는 쓰지 않습니다.
+JDK 1.8과 Maven이 필요합니다. 실행 의존성은 없고, 테스트에 JUnit 4만 씁니다.
 
 ```sh
-go test ./...                                  # 단위 테스트 + 합성 시나리오 회귀 테스트
-go test ./cmd/arsxml2wv -update                # 의도한 변경이면 기대 결과(testdata/golden) 갱신
-scripts/regress.sh                             # 로컬 samples/*.xml 회귀 확인 (samples/expected 와 비교)
-scripts/regress.sh update                      # 결과 검토 후 기대값 갱신
-
-# Windows exe 빌드 (Mac/Linux에서 교차 빌드)
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o dist/arsxml2wv.exe ./cmd/arsxml2wv
+mvn package                     # 컴파일 + 테스트 + target/arsxml2wv.jar 생성
+mvn test -Dupdate=true          # 의도한 변경이면 E2E 기대 결과(src/test/resources/e2e/golden) 갱신
+scripts/regress.sh              # 로컬 samples/*.xml 회귀 확인 (samples/expected 와 비교)
+scripts/regress.sh update       # 결과 검토 후 기대값 갱신
+scripts/package.sh              # 배포 묶음 dist/arsxml2wv/, dist/arsxml2wv.zip 생성 (인터넷 필요)
 ```
 
-- Go 1.21 이상으로 빌드한 exe는 Windows 10 / Server 2016 이상에서 실행됩니다.
-- Windows 7 / Server 2012 환경이 있다면 Go 1.20으로 빌드해야 합니다.
-- `samples/`(운영 XML 등)와 `dist/`는 Git에 올리지 않습니다.
+- **폐쇄망에서 코드를 수정한 경우:** `mvn package`로 `target/arsxml2wv.jar`만 다시 만들어 배포 폴더의 jar를 교체합니다. exe는 다시 만들 필요가 없습니다.
+- **exe 래퍼:** `mvn -P exe package`로 만듭니다. Launch4j Maven 플러그인을 내려받아야 하므로 인터넷이 되는 PC에서 한 번만 실행합니다.
+- JDK 9 이상으로 빌드해도 `release 8` 옵션이 자동으로 적용되어 Java 8 API만 사용합니다.
+- `samples/`(운영 XML 등), `dist/`, `target/`은 Git에 올리지 않습니다.
+- Go로 작성했던 이전 구현은 `go-final` 태그에 남아 있습니다. Java 버전은 같은 입력에 대해 Go 버전과 바이트 단위로 같은 결과를 냅니다(E2E 테스트로 확인).
 
 ### 구조
 
-도메인마다 `entity`(모델·규칙), `service`(로직), `controller`(진입점·입출력)로 나눕니다.
+도메인마다 entity(모델·규칙), `*Service`(로직), `*Controller`(진입점·입출력)로 나눕니다. 패키지는 `com.wavve.arsxml2wv`입니다.
 
 | 패키지 | 역할 |
 |---|---|
-| `cmd/arsxml2wv` | 명령행 진입점 |
-| `internal/diagram` | XML 파싱, 노드·링크 모델 |
-| `internal/input` | 입력 노드 PreScript 해석 |
-| `internal/label` | 버튼 문구 결정 |
-| `internal/wv` | 화면코드 결정, 스크립트 생성 (템플릿 내장) |
-| `internal/tsv` | 검토용 TSV 작성, 파일 저장 |
+| `Main` | 명령행 진입점 |
+| `diagram` | XML 파싱(XXE 차단), 노드·링크 모델 |
+| `input` | 입력 노드 PreScript 해석 |
+| `label` | 버튼 문구 결정, labels.properties 읽기 |
+| `wv` | 화면코드 결정, 스크립트 생성 (템플릿: `src/main/resources/screen.js.tmpl`) |
+| `common` | TSV 작성·저장, Go와 같은 공백·정규식·따옴표 처리 |

@@ -1,7 +1,7 @@
 # arsxml2wv 사용 가이드
 
 시나리오 XML에서 보이는 ARS(WV) 화면 스크립트 초안을 자동으로 만드는 Windows 프로그램의 사용 방법입니다.
-폐쇄망 PC에서 `arsxml2wv.exe` 파일 하나만으로 실행됩니다.
+폐쇄망 PC에서 인터넷 연결 없이 실행됩니다. PC에 설치된 Java(1.8 이상)를 사용합니다.
 
 ---
 
@@ -18,18 +18,29 @@
 
 ## 2. 실행 환경
 
-- Windows 10 / Windows Server 2016 이상 (64비트)
-- 별도 설치 프로그램, Java, 인터넷 연결이 필요 없습니다.
-- 반입할 파일은 `arsxml2wv.exe`, 이 문서, `labels.example.properties`(선택)입니다.
+- Windows PC에 **Java 1.8 이상(JDK 또는 JRE)** 이 설치되어 있어야 합니다.
+  - `JAVA_HOME` 환경 변수나 `PATH`에서 Java를 찾습니다.
+  - 확인 방법: 명령 프롬프트에서 `java -version`
+- 인터넷 연결이나 추가 라이브러리는 필요 없습니다.
+- 반입할 파일은 배포 묶음(`arsxml2wv.zip`) 하나입니다. 압축을 풀면 아래 파일이 있습니다.
+
+| 파일 | 설명 |
+|---|---|
+| `arsxml2wv.exe` | 실행 파일. 같은 폴더의 `arsxml2wv.jar`를 Java로 실행합니다 |
+| `arsxml2wv.jar` | 프로그램 본체. **exe와 반드시 같은 폴더에 두세요** |
+| `arsxml2wv.bat` | exe를 쓸 수 없을 때 대신 쓰는 실행 파일 (사용법 동일) |
+| `USAGE.md` | 이 문서 |
+| `labels.example.properties` | 문구 보완 파일 예시 |
 
 > 사내 백신이나 SmartScreen이 서명되지 않은 exe를 막을 수 있습니다. 반입 승인과 예외 등록 절차는 보안 담당자와 확인하세요.
 
 ## 3. 빠른 시작
 
-1. 작업 폴더를 만들고 exe와 변환할 XML을 넣습니다.
+1. 작업 폴더를 만들고 배포 묶음의 파일과 변환할 XML을 넣습니다.
    ```
    C:\wv\
    ├─ arsxml2wv.exe
+   ├─ arsxml2wv.jar
    └─ sh_menu3_6_1_4.xml
    ```
 2. 명령 프롬프트(cmd)를 열고 작업 폴더로 이동합니다.
@@ -175,14 +186,17 @@ arsxml2wv.exe <입력 XML> <출력 폴더> [문구 보완 파일]
 | 증상 | 원인과 조치 |
 |---|---|
 | `usage: arsxml2wv <input.xml> <output-dir> [labels.properties]` | 인자 개수가 맞지 않습니다. 경로에 공백이 있으면 큰따옴표로 감싸세요 |
-| `error: open ...: The system cannot find the file specified.` | 파일 경로가 틀렸습니다. `dir`로 파일 이름을 확인하세요 |
-| `error: ...: parse XML: ...` | XML 형식이 깨졌거나 시나리오 XML이 아닙니다 (최상위 요소가 `Diagram`이어야 함) |
-| `error: ...: parse XML: xml: encoding "..." declared but Decoder.CharsetReader is nil` | XML이 UTF-8이 아닙니다. 디자이너에서 저장한 원본 XML(UTF-8)을 사용하세요 |
+| `error: open ...: file not found` | 파일 경로가 틀렸습니다. `dir`로 파일 이름을 확인하세요 |
+| `error: ...: parse XML: line N, column M: ...` | XML 형식이 깨졌습니다. 표시된 줄·열 위치를 확인하세요 |
+| `error: ...: parse XML: expected element type <Diagram> ...` | 시나리오 XML이 아닙니다 (최상위 요소가 `Diagram`이어야 함) |
+| `error: ...: parse XML: encoding "..." is not supported; save the XML as UTF-8` | XML이 UTF-8이 아닙니다. 디자이너에서 저장한 원본 XML(UTF-8)을 사용하세요 |
+| `error: ...: parse XML: line N, column M: DOCTYPE is not allowed` | 보안을 위해 DOCTYPE 선언이 있는 XML은 처리하지 않습니다. 디자이너 원본 XML을 사용하세요 |
 | `error: ...: duplicate node Id: N` | XML에 같은 Id의 노드가 두 개 있습니다. XML을 확인하세요 |
 | 결과 파일의 한글이 깨짐 | 결과는 UTF-8입니다. 메모장이나 VS Code로 열고, Excel은 7장 방법으로 여세요 |
 | 문구 보완이 반영되지 않음 | ① Id가 맞는지(Sequence 아님) ② 파일이 UTF-8인지 ③ `#` 키를 `\#`로 썼는지 ④ 실행할 때 세 번째 인자로 파일을 지정했는지 확인하세요 |
-| exe가 실행되지 않거나 바로 삭제됨 | 백신이나 실행 정책이 차단한 경우입니다. 보안 담당자에게 예외 등록을 요청하세요 |
-| "이 앱은 PC에서 실행할 수 없습니다" | 32비트 Windows이거나 Windows 10 이전 버전입니다. 개발 담당자에게 해당 환경용 빌드를 요청하세요 |
+| Java를 찾을 수 없다는 메시지가 나옴 | Java 1.8 이상이 없거나 `JAVA_HOME`·`PATH`에 등록되지 않았습니다. `java -version`으로 확인하세요 |
+| `Unable to access jarfile` 또는 jar를 찾을 수 없다는 메시지 | `arsxml2wv.jar`가 exe(또는 bat)와 같은 폴더에 있는지 확인하세요 |
+| exe가 실행되지 않거나 바로 삭제됨 | 백신이나 실행 정책이 차단한 경우입니다. 예외 등록을 요청하거나 `arsxml2wv.bat`을 사용하세요 |
 
 ## 10. 지원하지 않는 기능
 

@@ -1,8 +1,0 @@
-node_id	key	label	source
-4	1	이체를 진행	comment
-4	2	취소	comment
-4	*		none
-4	#	초기메뉴 이동	branch
-8	1	다른 이체	comment
-8	9	처음으로	comment
-8	#	이전 단계	override
