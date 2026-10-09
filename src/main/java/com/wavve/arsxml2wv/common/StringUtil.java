@@ -75,4 +75,53 @@ public final class StringUtil {
     public static String nz(String s) {
         return s == null ? "" : s;
     }
+
+    /** Go strconv.Quote(%q) 와 같은 따옴표 표기. 오류 메시지를 Go 버전과 같게 유지한다. */
+    public static String goQuote(String s) {
+        StringBuilder b = new StringBuilder("\"");
+        for (int i = 0; i < s.length(); i += Character.charCount(s.codePointAt(i))) {
+            appendQuoted(b, s.codePointAt(i));
+        }
+        return b.append('"').toString();
+    }
+
+    private static void appendQuoted(StringBuilder b, int cp) {
+        switch (cp) {
+            case 0x07: b.append("\\a"); return;
+            case '\b': b.append("\\b"); return;
+            case '\f': b.append("\\f"); return;
+            case '\n': b.append("\\n"); return;
+            case '\r': b.append("\\r"); return;
+            case '\t': b.append("\\t"); return;
+            case 0x0B: b.append("\\v"); return;
+            case '\\': b.append("\\\\"); return;
+            case '"': b.append("\\\""); return;
+            default:
+                break;
+        }
+        if (isPrint(cp)) {
+            b.appendCodePoint(cp);
+        } else if (cp < 0x80) {
+            b.append(String.format("\\x%02x", cp));
+        } else if (cp <= 0xFFFF) {
+            b.append(String.format("\\u%04x", cp));
+        } else {
+            b.append(String.format("\\U%08x", cp));
+        }
+    }
+
+    /** Go unicode.IsPrint: 문자·기호·숫자·구두점과 ASCII 공백만 출력 가능으로 본다. */
+    private static boolean isPrint(int cp) {
+        if (cp == ' ') {
+            return true;
+        }
+        switch (Character.getType(cp)) {
+            case Character.CONTROL: case Character.FORMAT: case Character.PRIVATE_USE:
+            case Character.SURROGATE: case Character.UNASSIGNED: case Character.SPACE_SEPARATOR:
+            case Character.LINE_SEPARATOR: case Character.PARAGRAPH_SEPARATOR:
+                return false;
+            default:
+                return true;
+        }
+    }
 }
